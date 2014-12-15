@@ -16,16 +16,16 @@ runCmd (Token (External, cmd)) args
         argString = foldr (++) [] untokenizedArgs
 
 printProcessResult :: (ExitCode, String, String) -> String
-printProcessResult (ExitSuccess, _, _) = ""
-printProcessResult (ExitFailure i, _, _) = printf "exited %i" i
+printProcessResult (ExitSuccess, pOut, pErr) = pOut ++ pErr
+printProcessResult (ExitFailure i, pOut, pErr) = printf "exited %i:\n%s\n%s" i pOut pErr
 
 unrecognizedCommand :: IO ()
 unrecognizedCommand = putStrLn "unrecognized command"
 
 processCommands :: String -> IO ()
-processCommands "" = unrecognizedCommand
-processCommands line | tokenFilling command == "echo" = putStrLn (untokenizedArgs)
-                     | tokenType command == External  = runCmd command args
+processCommands "" = return ()
+processCommands line | tokenType command == External  = runCmd command args
+                     | tokenFilling command == "echo" = putStrLn untokenizedArgs
                      | otherwise                      = unrecognizedCommand
               where command = head (tokenize line)
                     args = tail (tokenize line)
